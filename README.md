@@ -134,14 +134,14 @@ Escenario ───────────────────────�
 ---
 
 ## 📐 Medidas DAX
-
+ 
 ### Medidas base
 ```dax
 Monto Total = SUM(Finanzas[Monto])
 Monto Real = CALCULATE([Monto Total], Finanzas[Escenario] = "Real")
 Monto Presupuesto = CALCULATE([Monto Total], Finanzas[Escenario] = "Presupuesto")
 ```
-
+ 
 ### Medidas financieras
 ```dax
 Ingresos = CALCULATE([Monto Real], Cuentas[Tipo] = "Ingreso")
@@ -150,25 +150,39 @@ Gastos   = ABS(CALCULATE([Monto Real], Cuentas[Tipo] = "Gasto Operacional"))
 Utilidad = [Ingresos] - [Costos] - [Gastos]
 Margen % = DIVIDE([Utilidad], [Ingresos], 0)
 ```
-
+ 
+### Variaciones presupuestales
+```dax
+Variación vs Presupuesto    = [Monto Real] - [Monto Presupuesto]
+Variación %                 = DIVIDE([Variación vs Presupuesto], ABS([Monto Presupuesto]), 0)
+Cumplimiento Presupuesto %  = DIVIDE([Monto Real], [Monto Presupuesto], 0)
+Indicador Variación         = SWITCH(TRUE(),
+    [Cumplimiento Presupuesto %] >= 1,        "🔴 Sobre presupuesto",
+    [Cumplimiento Presupuesto %] >= 0.95,     "🟠 En rango aceptable",
+    [Cumplimiento Presupuesto %] >= 0.85,     "🟡 Alerta moderada",
+    "✅ Bajo presupuesto")
+```
+ 
 ### Inteligencia de tiempo
 ```dax
-Real Mes Anterior       = CALCULATE([Monto Real], DATEADD(Calendario[Date], -1, MONTH))
+Real Mes Anterior       = CALCULATE([Monto Real], DATESMTD(Calendario[Date]))
 Variación Mes Anterior  = [Monto Real] - [Real Mes Anterior]
 Monto Real YTD          = CALCULATE([Monto Real], DATESYTD(Calendario[Date]))
 ```
-
+ 
 ### Texto ejecutivo dinámico
 ```dax
 Texto Ejecutivo Dinámico =
-VAR _real    = [Monto Real]
-VAR _ppto    = [Monto Presupuesto]
-VAR _signo   = IF([Variación vs Presupuesto] >= 0, "superó", "quedó por debajo de")
-VAR _pct     = FORMAT(ABS([Cumplimiento Presupuesto %] - 1), "0.0%")
+VAR REAL = FORMAT([Monto Real], "#,##0.00")
+VAR PPTO = FORMAT([Monto Presupuesto], "#,##0.00")
+VAR VARIACION = [Variacion vs Presupuesto]
+VAR CUMPLIMIENTO = FORMAT(ABS([Cumplimiento Presupuesto %] - 1), "0.0%")
+VAR SIGNO = IF(VARIACION >= 0, "superó", "quedó por debajo de")
+
 RETURN
-"El monto real fue $" & FORMAT(_real, "#,##0.00") &
-" frente a un presupuesto de $" & FORMAT(_ppto, "#,##0.00") &
-". La ejecución " & _signo & " el presupuesto en " & _pct & "."
+"El monto real fue $" & REAL &
+" frente a un presupuesto de $" & PPTO &
+". La ejecución " & SIGNO & " el presupuesto en " & CUMPLIMIENTO & "."
 ```
 
 ---
