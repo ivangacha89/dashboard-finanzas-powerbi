@@ -185,6 +185,12 @@ RETURN
 ". La ejecución " & SIGNO & " el presupuesto en " & CUMPLIMIENTO & "."
 ```
 
+### Títulos dinámicos
+```dax
+Titulo_Grafico_Meses = "REAL VS PRESUPUESTO POR MES — " & SELECTEDVALUE(Calendario[Año], "Todos los años")
+Titulo_Grafico_Evolucion_Mensual = "EVOLUCIÓN MENSUAL REAL — " & SELECTEDVALUE(Calendario[Año], "Todos los años")
+```
+
 ---
 
 ## 🖥️ Dashboard
