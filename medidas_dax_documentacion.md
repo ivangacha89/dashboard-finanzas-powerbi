@@ -1,7 +1,4 @@
-# 📊 Documentación de Medidas DAX
-## Proyecto: Finanzas Avanzado — Power BI
-**Organización:** IPS Datax  
-**Objetivo del proyecto:** Dashboard financiero ejecutivo para análisis de ingresos, costos, gastos, utilidad, presupuesto, variaciones financieras y desempeño por centro de costo.
+# 📏 Documentación de Medidas DAX
 
 ---
 
@@ -65,7 +62,7 @@ Filtra `Monto Total` para retornar únicamente los valores del escenario **Presu
 
 ## 2. Medidas Financieras
 
-Estas medidas descomponen los montos reales en las categorías del estado de resultados, utilizando la tabla `Dim_Cuentas` (columna `Tipo`) como clasificador.
+Estas medidas descomponen los montos reales en las categorías del estado de resultados, utilizando la tabla `Cuentas` (columna `Tipo`) como clasificador.
 
 ---
 
@@ -80,7 +77,7 @@ CALCULATE(
 ```
 
 **¿Para qué se usa?**  
-Suma los montos reales de todas las cuentas clasificadas como **Ingreso** en `Dim_Cuentas` (ventas de productos y servicios profesionales). Es el punto de partida del estado de resultados y el denominador del cálculo de margen. Se muestra en tarjetas KPI y en el waterfall financiero.
+Suma los montos reales de todas las cuentas clasificadas como **Ingreso** en `Cuentas` (ventas de productos y servicios profesionales). Es el punto de partida del estado de resultados y el denominador del cálculo de margen. Se muestra en tarjetas KPI y en el waterfall financiero.
 
 ---
 
@@ -440,4 +437,4 @@ Para que estas medidas funcionen correctamente, el modelo debe tener las siguien
 
 ---
 
-*Documentación generada para el repositorio del proyecto — IPS Datax / Power BI Avanzado Finanzas*
+*Documentación generada para el repositorio del proyecto — Power BI Avanzado Finanzas*
