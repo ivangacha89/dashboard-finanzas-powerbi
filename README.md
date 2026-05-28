@@ -1,4 +1,4 @@
-# 📊 Dashboard Ejecutivo — Análisis Financiero Avanzado
+# 📈 Dashboard Ejecutivo — Análisis Financiero Avanzado
 
 > ETL avanzado en Power Query · Limpieza de datos multicapa · Modelo estrella · DAX financiero · Inteligencia de tiempo
 
@@ -12,7 +12,6 @@
 | **Power Query (M)** | ETL, limpieza y transformación de datos |
 | **DAX** | Medidas financieras, KPIs, inteligencia de tiempo y texto dinámico |
 | **Excel** | Fuente de datos origen con múltiples inconsistencias intencionales |
-| **Python (pandas)** | Validación y auditoría de valores de referencia |
 
 ---
 
@@ -22,16 +21,31 @@ Desarrollo de un **dashboard financiero ejecutivo** a partir de un dataset con i
 
 ---
 
-## 📂 Estructura del Repositorio
+## ❓ Preguntas que responde este dashboard
+
+- ¿La empresa está cumpliendo el presupuesto financiero?
+- ¿Qué tan rentable es la operación?
+- ¿Qué centros de costo presentan mayores variaciones?
+- ¿Cómo evolucionan los resultados frente al año anterior?
+- ¿Cuál es el impacto de costos y gastos sobre la utilidad?
+
+---
+
+## 🗂 Estructura del Repositorio
 
 ```
-📦 dashboard-finanzas-avanzado-powerbi
-├── 📊 finanzas.pbix
+📶 dashboard-finanzas-avanzado-powerbi
+├── 📈 finanzas.pbix
 ├── 📂 dataset/
 │   └── Proyecto_Finanzas_Avanzado_Power_BI.xlsx
 ├── 📂 screenshots/
-│   └── dashboard_ejecutivo_finanzas.png
+│   └── dashboard_ejecutivo_finanzas_1.png
+│   └── dashboard_ejecutivo_finanzas_2.png
+│   └── dashboard_ejecutivo_finanzas_3_filtro_2024.png
+│   └── dashboard_ejecutivo_finanzas_4_filtro_2025.png
+│   └── vista_de_modelo.png
 └── 📄 README.md
+└── 📄 medidas_dax_documentacion.md
 ```
 
 ---
@@ -61,7 +75,7 @@ Antes de cualquier transformación se realizó un análisis exhaustivo del datas
 
 ---
 
-## ⚙️ Proceso ETL — Power Query (Lenguaje M)
+## 🗃 Proceso ETL — Power Query (Lenguaje M)
 
 Todo el proceso de limpieza se implementó paso a paso en Power Query para garantizar trazabilidad, reproducibilidad y auditoría de cada transformación.
 
@@ -97,7 +111,7 @@ N/C / pendiente    → Valores no recuperables → null
 | `CuentaID` | Eliminación de registros nulos y con `Cta_9999` |
 | `CentroCostoID` | Eliminación de registros nulos |
 
-### 📊 Resultado post-limpieza
+### 📉 Resultado post-limpieza
 
 | Métrica | Antes | Después |
 |---|---|---|
@@ -109,87 +123,48 @@ N/C / pendiente    → Valores no recuperables → null
 
 ---
 
-## 🌟 Modelo de Datos
+## 🌟 Modelo de Datos y 📋 Descripción de Tablas
 
 Arquitectura **modelo estrella** con 5 tablas:
 
-```
-Calendario ─────────────────────────────────────┐
-                                                 │
-Cuentas ──────────────────────────────────────── Finanzas (Fact)
-                                                 │
-CentroCosto ─────────────────────────────────────┤
-                                                 │
-Escenario ───────────────────────────────────────┘
-```
+Tabla de hechos
 
-| Tabla | Tipo | Filas |
-|---|---|---|
-| `Finanzas` | Hechos | 3.211 |
-| `Cuentas` | Dimensión | 12 |
-| `CentroCosto` | Dimensión | 6 |
-| `Escenario` | Dimensión | 2 |
-| `Calendario` | Dimensión tiempo | Dinámica |
+- Finanzas
+
+Tablas de dimensión
+
+- Cuentas
+- CentroCosto
+- Escenario
+
+Tabla dinámica
+
+- Calendario
+
+Tablas adicionales:
+
+- Medidas: para ordenamiento de las medidas DAX creadas.
+- TablaEstadoResultados: creada para mostrar la información de la visual de "Estado de Resultados" en el formato deseado.
+
+Se adjunta una imagen del modelo de datos y sus relaciones entre tablas. Relaciones de **Varios a Uno (*:1)**
+
+<img src="screenshots/vista_de_modelo.png" width="700"/>
+
+| Tabla | Tipo | Dimensión | Columnas |
+|---|---|---|---|
+| `Finanzas` | Hechos | 3.211 | CentroCostoID · CentaID · Escenario · Fecha · Id_Registro · Moneda · Monto |
+| `Cuentas` | Dimensión | 12 | CuenaID · NombreCuenta · Tipo |
+| `CentroCosto` | Dimensión | 6 | Area · CentroCosto · CentroCostoID · Pais · Responsable |
+| `Escenario` | Dimensión | 2 | Descripcion · Escenario |
+| `Calendario` | Dimensión tiempo | Dinámica | Relacionadas a valores de fecha | 
 
 ---
 
 ## 📐 Medidas DAX
- 
-### Medidas base
-```dax
-Monto Total = SUM(Finanzas[Monto])
-Monto Real = CALCULATE([Monto Total], Finanzas[Escenario] = "Real")
-Monto Presupuesto = CALCULATE([Monto Total], Finanzas[Escenario] = "Presupuesto")
-```
- 
-### Medidas financieras
-```dax
-Ingresos = CALCULATE([Monto Real], Cuentas[Tipo] = "Ingreso")
-Costos   = ABS(CALCULATE([Monto Real], Cuentas[Tipo] = "Costo"))
-Gastos   = ABS(CALCULATE([Monto Real], Cuentas[Tipo] = "Gasto Operacional"))
-Utilidad = [Ingresos] - [Costos] - [Gastos]
-Margen % = DIVIDE([Utilidad], [Ingresos], 0)
-```
- 
-### Variaciones presupuestales
-```dax
-Variación vs Presupuesto    = [Monto Real] - [Monto Presupuesto]
-Variación %                 = DIVIDE([Variación vs Presupuesto], ABS([Monto Presupuesto]), 0)
-Cumplimiento Presupuesto %  = DIVIDE([Monto Real], [Monto Presupuesto], 0)
-Indicador Variación         = SWITCH(TRUE(),
-    [Cumplimiento Presupuesto %] >= 1,        "🔴 Sobre presupuesto",
-    [Cumplimiento Presupuesto %] >= 0.95,     "🟠 En rango aceptable",
-    [Cumplimiento Presupuesto %] >= 0.85,     "🟡 Alerta moderada",
-    "✅ Bajo presupuesto")
-```
- 
-### Inteligencia de tiempo
-```dax
-Real Mes Anterior       = CALCULATE([Monto Real], DATESMTD(Calendario[Date]))
-Variación Mes Anterior  = [Monto Real] - [Real Mes Anterior]
-Monto Real YTD          = CALCULATE([Monto Real], DATESYTD(Calendario[Date]))
-```
- 
-### Texto ejecutivo dinámico
-```dax
-Texto Ejecutivo Dinámico =
-VAR REAL = FORMAT([Monto Real], "#,##0.00")
-VAR PPTO = FORMAT([Monto Presupuesto], "#,##0.00")
-VAR VARIACION = [Variacion vs Presupuesto]
-VAR CUMPLIMIENTO = FORMAT(ABS([Cumplimiento Presupuesto %] - 1), "0.0%")
-VAR SIGNO = IF(VARIACION >= 0, "superó", "quedó por debajo de")
 
-RETURN
-"El monto real fue $" & REAL &
-" frente a un presupuesto de $" & PPTO &
-". La ejecución " & SIGNO & " el presupuesto en " & CUMPLIMIENTO & "."
-```
+Se hizo una documentación de la funcionalidad de cada una de las medidas DAX creadas, remitirse al enlace que se relaciona a continuación.
 
-### Títulos dinámicos
-```dax
-Titulo_Grafico_Meses = "REAL VS PRESUPUESTO POR MES — " & SELECTEDVALUE(Calendario[Año], "Todos los años")
-Titulo_Grafico_Evolucion_Mensual = "EVOLUCIÓN MENSUAL REAL — " & SELECTEDVALUE(Calendario[Año], "Todos los años")
-```
+[📐 Medidas DAX](medidas_dax_documentacion.md)
 
 ---
 
@@ -202,65 +177,54 @@ Dashboard ejecutivo de una sola página con diseño oscuro profesional (`#0F1923
 | # | Visual | Descripción |
 |---|---|---|
 | 1 | Segmentadores | Año · Mes · Centro de Costo · País |
-| 2 | 5 Tarjetas KPI | Real · Presupuesto · Variación · Cumplimiento · YTD |
-| 3 | Barras agrupadas | Real vs Presupuesto por mes |
-| 4 | Gráfico de líneas | Evolución mensual con mes anterior |
-| 5 | Tabla con ranking | Gastos por centro de costo con formato condicional |
-| 6 | Tabla dinámica | Estado de resultados (Ingresos → Costos → Gastos → Utilidad → Margen) |
-| 7 | Barras agrupadas | Composición financiera: Ingresos / Costos / Gastos / Utilidad |
-| 8 | Tarjeta de texto | Resumen ejecutivo dinámico generado por DAX |
+| 2 | Tarjetas KPI | Real · Presupuesto · Variación vs Presupuesto · Variación % · Cumplimiento Presupuesto · Indicador Variación |
+| 3 | Tabla - Tarjeta KPI | Composición financiera: Ingresos / Costos / Gastos / Utilidad · Resumen ejecutivo dinámico generado por DAX |
+| 4 | Gráfico de columnas apiladas y de líneas | Real vs Presupuesto por mes y año |
+| 5 | Gráfico de líneas | Utilidad por mes y año |
+| 6 | Tabla con ranking - Gráfico de cascada | Gastos por centro de costo con formato condicional · Comportamiento de los Ingresos → Costos → Gastos |
+| 7 | Tabla dinámica | Estado de resultados (Ingresos → Costos → Gastos → Utilidad → Margen)  |
 
-### Vista del dashboard
+### Imagenes del dashboard
 
-<img src="screenshots/dashboard_ejecutivo_finanzas.png" width="700"/>
+<img src="screenshots/dashboard_ejecutivo_finanzas_1.png" width="700"/>
+<img src="screenshots/dashboard_ejecutivo_finanzas_2.png" width="700"/>
+
+- Filtro aplicado del año 2024
+
+<img src="screenshots/dashboard_ejecutivo_finanzas_3_filtro_2024.png" width="700"/>
+
+- Filtro aplicado del año 2025
+
+<img src="screenshots/dashboard_ejecutivo_finanzas_4_filtro_2025.png" width="700"/>
 
 ---
 
-## 📈 Resultados & Hallazgos Clave
+## 📋 Resultados & Hallazgos Clave
 
 ### Métricas consolidadas del período 2024–2025
 
 | Métrica | Valor |
 |---|---|
-| 💰 Monto Real total | **$7,338,251.70** |
-| 🎯 Presupuesto total | **$7,405,467.30** |
-| 📉 Variación absoluta | **-$67,215.60** |
-| 📊 Cumplimiento | **99.09%** |
+| 💰 Monto Real total | **$7,330,774** |
+| 🎯 Presupuesto total | **$7,399,370** |
+| 📉 Variación absoluta | **-$68,596** |
+| 📊 Cumplimiento | **99.1%** |
 | 🏦 Ingresos | **$15,296,109.58** |
 | 💸 Costos | **$5,307,245.54** |
 | 🏢 Gastos operacionales | **$2,658,089.71** |
 | ✅ Utilidad neta | **$7,330,774.33** |
-| 📐 Margen neto | **47.93%** |
-| 📅 Real YTD (2025) | **$3,723,958.84** |
+| 📐 Margen neto | **47.9%** |
 
 ### 🔑 Hallazgos del análisis
 
-- **Cumplimiento casi perfecto:** El equipo ejecutó el 99.09% del presupuesto — una brecha de solo $67K sobre $7.4M presupuestados, lo que indica una planificación financiera muy precisa.
+- **Cumplimiento casi perfecto:** El equipo ejecutó el 99.1% del presupuesto — una brecha de solo $69K sobre $7.4M presupuestados, lo que indica una planificación financiera muy precisa.
 
-- **Margen neto saludable del 47.93%:** De cada $100 de ingresos, $47.93 se convierten en utilidad neta después de descontar costos y gastos operacionales.
+- **Margen neto saludable del 47.9%:** De cada $100 de ingresos, $47.93 se convierten en utilidad neta después de descontar costos y gastos operacionales.
 
 - **Los costos representan el 34.7% de los ingresos** y los gastos operacionales el 17.4%, dejando un margen operativo sólido y estructura de costos controlada.
 
-- **Variación negativa concentrada en ciertos centros:** El análisis por centro de costo revela que Ventas (-$66,528) y Tecnología (-$14,365) explican la mayor parte de la subejecución, mientras Dirección (+$58,366) y Marketing (+$31,928) superaron su presupuesto.
-
-- **Calidad de datos crítica:** El dataset original presentaba 5 formatos distintos de número en una sola columna y 241 registros con datos irrecuperables — un caso real de datos en producción que requirió lógica M avanzada para su normalización.
-
-- **2025 supera a 2024:** El Real de 2025 ($3,723,958.84 YTD) supera al de 2024 ($3,614,292.86 completo), evidenciando crecimiento interanual positivo.
+- **Variación negativa concentrada en ciertos centros:** El análisis por centro de costo revela que Ventas (-$71,234) y Tecnología (-$33,224) explican la mayor parte de la subejecución, mientras Dirección (+$51,123) y Marketing (+$37,229) superaron su presupuesto.
 
 ---
 
-## ✅ Validación de datos
-
-Los valores del dashboard fueron auditados contra cálculos independientes en Python (pandas) para garantizar la integridad de las transformaciones:
-
-| Medida | Python | Power BI | ✓ |
-|---|---|---|---|
-| Total registros | 3.211 | 3.211 | ✅ |
-| Suma Total Monto | 14,743,719.00 | 14,743,719.00 | ✅ |
-| Monto Real | 7,338,251.70 | 7,338,251.70 | ✅ |
-| Monto Presupuesto | 7,405,467.30 | 7,405,467.30 | ✅ |
-| Variación | -67,215.60 | -67,215.60 | ✅ |
-
----
-
-*Proyecto desarrollado como parte del portafolio de análisis de datos — IPS Datax.*
+*Proyecto desarrollado como parte del portafolio de análisis de datos.*
