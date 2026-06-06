@@ -227,8 +227,6 @@ Dashboard ejecutivo de una sola página con diseño oscuro profesional (`#0F1923
 
 ---
 
----
-
 ## 🧠 Conclusiones
 
 ### Sobre la calidad de datos y el proceso ETL
