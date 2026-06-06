@@ -227,4 +227,31 @@ Dashboard ejecutivo de una sola página con diseño oscuro profesional (`#0F1923
 
 ---
 
+---
+
+## 🧠 Conclusiones
+
+### Sobre la calidad de datos y el proceso ETL
+
+El mayor reto del proyecto no fue el análisis financiero, sino la preparación de los datos. El dataset original contenía problemas en prácticamente todas sus columnas — 5 formatos distintos de monto, fechas imposibles, valores texto no recuperables y códigos huérfanos — lo que obligó a diseñar un pipeline de limpieza robusto y trazable en Power Query. Este proceso demostró que en análisis de datos reales, el ETL suele ser la etapa más crítica y la que más tiempo consume, antes de poder hacer cualquier visualización.
+
+La decisión de aplicar **Fill Down** en fechas nulas (en lugar de eliminar los registros) y de usar `ABS()` en costos y gastos (en lugar de cambiar los signos en la fuente) refleja buenas prácticas: respetar la semántica del dato original y aplicar transformaciones explícitas y documentadas.
+
+### Sobre el modelo dimensional
+
+La arquitectura de **modelo estrella** con una tabla de hechos central (`Finanzas`) y cinco dimensiones claramente separadas permitió construir medidas DAX limpias y reutilizables. La creación de `TablaEstadoResultados` como tabla de parámetros fue una decisión de diseño clave: permitió construir el estado de resultados como una visual dinámica sin duplicar lógica, algo que no sería posible sin separar la capa de presentación del modelo de datos.
+
+### Sobre las medidas DAX
+
+El proyecto evolucionó de medidas simples (`SUM`, `CALCULATE`) hacia patrones más avanzados: uso de `DIVIDE()` para evitar errores de división, `ISINSCOPE()` para controlar el comportamiento del ranking en subtotales, y generación de texto narrativo dinámico con `FORMAT()` y concatenación de variables DAX. Esto demuestra que DAX no es solo un lenguaje de cálculo, sino también una herramienta de comunicación ejecutiva cuando se usa correctamente.
+
+### Aprendizajes técnicos clave
+
+- La limpieza de datos con múltiples formatos de un mismo campo requiere una estrategia paso a paso, no un solo reemplazo masivo.
+- El modelo estrella facilita el mantenimiento y la escalabilidad: agregar una nueva dimensión no rompe las medidas existentes.
+- Las medidas de inteligencia de tiempo (`PREVIOUSMONTH`, `TOTALYTD`) solo funcionan si la tabla de calendario está correctamente construida y relacionada.
+- El texto ejecutivo dinámico es una funcionalidad de alto impacto para audiencias no técnicas, y requiere menos esfuerzo de implementación de lo que parece.
+
+---
+
 *Proyecto desarrollado como parte del portafolio de análisis de datos.*
